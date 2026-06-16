@@ -1,41 +1,60 @@
+const fs = require('fs');
 const { chromium } = require('playwright');
 const path = require('path');
+const { createLeadData } = require('./test-data/leadData');
 
 const TARGET_URL = 'https://test.netlify.app/';
-const SCREENSHOT_PATH = path.join(__dirname, 'before-submit.png');
+const EXPECTED_EMPLOYEES = '51-500';
+const SCREENSHOT_PATH = path.join(__dirname, 'screenshots', 'before-submit.png');
 
-const formData = {
-  name: 'Shoham Liebermann',
-  email: 'shoham.liebermann@acmetech.test',
-  phone: '+972-50-000-0000',
-  company: 'Acme Technologies Ltd.',
-  website: 'https://www.acmetech-solutions.test',
-  employees: '51-500',
-};
+function verifySubmittedQueryParams(pageUrl, submitted) {
+  const params = new URL(pageUrl).searchParams;
+
+  const expected = {
+    name: submitted.name,
+    email: submitted.email,
+    phone: submitted.phone,
+    company: submitted.company,
+    website: submitted.website,
+    number_of_employees: submitted.employees,
+  };
+
+  for (const [key, value] of Object.entries(expected)) {
+    if (params.get(key) !== value) {
+      throw new Error(
+        `Query parameter "${key}" expected "${value}" but got "${params.get(key)}"`
+      );
+    }
+  }
+}
 
 async function run() {
-  const browser = await chromium.launch();
+  const browser = await chromium.launch({ headless: process.env.HEADED !== '1' });
 
   try {
     const page = await browser.newPage();
     await page.goto(TARGET_URL);
 
-    await page.getByLabel('Name').fill(formData.name);
-    await page.getByLabel('Email').fill(formData.email);
-    await page.getByLabel('Phone').fill(formData.phone);
-    await page.getByLabel('Company').fill(formData.company);
-    await page.getByLabel('Website').fill(formData.website);
+    const leadData = createLeadData();
+    console.log(`Using lead: ${leadData.name}, ${leadData.email}, ${leadData.phone}`);
+
+    await page.getByLabel('Name *', { exact: true }).fill(leadData.name);
+    await page.getByLabel('Email *', { exact: true }).fill(leadData.email);
+    await page.getByLabel('Phone *', { exact: true }).fill(leadData.phone);
+    await page.getByLabel('Company', { exact: true }).fill(leadData.company);
+    await page.getByLabel('Website', { exact: true }).fill(leadData.website);
 
     const employeesSelect = page.getByLabel('Number of Employees');
-    await employeesSelect.selectOption(formData.employees);
+    await employeesSelect.selectOption(EXPECTED_EMPLOYEES);
 
     const selectedEmployees = await employeesSelect.inputValue();
-    if (selectedEmployees !== formData.employees) {
+    if (selectedEmployees !== EXPECTED_EMPLOYEES) {
       throw new Error(
-        `Expected "${formData.employees}" to be selected, but got "${selectedEmployees}"`
+        `Expected "${EXPECTED_EMPLOYEES}" to be selected, but got "${selectedEmployees}"`
       );
     }
 
+    fs.mkdirSync(path.dirname(SCREENSHOT_PATH), { recursive: true });
     await page.screenshot({
       path: SCREENSHOT_PATH,
       fullPage: true,
@@ -47,6 +66,15 @@ async function run() {
       page.getByRole('button', { name: 'Request a call back' }).click(),
     ]);
 
+    await page
+      .getByRole('heading', { name: 'Thank You!' })
+      .waitFor({ state: 'visible' });
+
+    verifySubmittedQueryParams(page.url(), {
+      ...leadData,
+      employees: EXPECTED_EMPLOYEES,
+    });
+
     console.log('Successfully reached the thank-you page.');
   } finally {
     await browser.close();
@@ -54,6 +82,6 @@ async function run() {
 }
 
 run().catch((error) => {
-  console.error('Automation failed:', error);
-  process.exitCode = 1;
+  console.error('Automation failed:', error.message);
+  process.exit(1);
 });
