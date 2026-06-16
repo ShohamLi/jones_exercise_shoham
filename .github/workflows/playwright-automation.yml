@@ -3,14 +3,14 @@ name: Playwright Automation
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
   pull_request:
-    branches:
-      - main
 
 permissions:
   contents: read
+
+concurrency:
+  group: playwright-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   run-automation:
@@ -32,7 +32,7 @@ jobs:
         run: npm ci
 
       - name: Install Chromium
-        run: npx playwright install --with-deps chromium
+        run: npm run install-browser
 
       - name: Run automation
         run: npm start
