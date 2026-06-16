@@ -5,7 +5,8 @@ const { createLeadData } = require('./test-data/leadData');
 
 const TARGET_URL = 'https://test.netlify.app/';
 const EXPECTED_EMPLOYEES = '51-500';
-const SCREENSHOT_PATH = path.join(__dirname, 'screenshots', 'before-submit.png');
+const SCREENSHOT_DIR = path.join(__dirname, 'screenshots');
+const SCREENSHOT_PATH = path.join(SCREENSHOT_DIR, 'before-submit.png');
 
 function verifySubmittedQueryParams(pageUrl, submitted) {
   const params = new URL(pageUrl).searchParams;
@@ -54,7 +55,7 @@ async function run() {
       );
     }
 
-    fs.mkdirSync(path.dirname(SCREENSHOT_PATH), { recursive: true });
+    fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     await page.screenshot({
       path: SCREENSHOT_PATH,
       fullPage: true,
