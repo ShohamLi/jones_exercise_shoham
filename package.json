@@ -1,0 +1,16 @@
+{
+  "name": "jones-exercise-shoham",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Playwright automation solution for the Jones Automation Exercise.",
+  "scripts": {
+    "start": "node main.js",
+    "install-browser": "playwright install chromium"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "playwright": "1.61.0"
+  }
+}
