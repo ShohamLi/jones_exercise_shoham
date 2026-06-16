@@ -27,11 +27,11 @@ npm run install-browser
 npm start
 ```
 
-The automation creates `before-submit.png` in the project root and prints a success message after reaching the thank-you page.
+The automation creates `screenshots/before-submit.png` and prints a success message after reaching the thank-you page.
 
 ## Project Files
 
 - `main.js` - Playwright automation
-- `before-submit.png` - screenshot generated before submission
+- `screenshots/before-submit.png` - screenshot generated before submission
 - `billing-widget-analysis.md` - manual QA and product analysis
 - `package.json` and `package-lock.json` - project dependencies

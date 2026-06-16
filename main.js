@@ -1,8 +1,10 @@
 const { chromium } = require('playwright');
+const fs = require('fs');
 const path = require('path');
 
 const TARGET_URL = 'https://test.netlify.app/';
-const SCREENSHOT_PATH = path.join(__dirname, 'before-submit.png');
+const SCREENSHOT_DIR = path.join(__dirname, 'screenshots');
+const SCREENSHOT_PATH = path.join(SCREENSHOT_DIR, 'before-submit.png');
 
 const formData = {
   name: 'Shoham Liebermann',
@@ -35,6 +37,8 @@ async function run() {
         `Expected "${formData.employees}" to be selected, but got "${selectedEmployees}"`
       );
     }
+
+    fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
 
     await page.screenshot({
       path: SCREENSHOT_PATH,
